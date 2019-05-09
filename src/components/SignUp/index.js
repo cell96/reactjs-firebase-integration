@@ -1,15 +1,14 @@
 import React, { Component } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, withRouter } from 'react-router-dom';
+import { compose } from 'recompose'
 
-import { FirebaseContext } from '../Firebase';
+import { withFirebase } from '../Firebase';
 import * as ROUTES from '../../constants/routes';
 
 const SignUpPage = () => (
   <div>
     <h1>Sign up</h1>
-    <FirebaseContext.Consumer>
-      {firebase => <SignUpForm firebase={firebase} />}
-    </FirebaseContext.Consumer>
+    <SignUpForm />
   </div>
 );
 
@@ -21,7 +20,7 @@ const INITIAL_STATE = {
   error: null,
 };
 
-class SignUpForm extends Component {
+class SignUpFormBase extends Component {
   constructor(props) {
     super(props);
     this.state = {...INITIAL_STATE};
@@ -33,6 +32,8 @@ class SignUpForm extends Component {
     this.props.firebase.doCreateUserWithEmailAndPassword(email, passwordOne)
     .then(authUser => {
       this.setState({ ...INITIAL_STATE }); //clears state
+      this.props.history.push(ROUTES.HOME);
+      console.log("signed up")
     })
     .catch(error => {
       this.setState({ error }); //updates error
@@ -90,7 +91,7 @@ class SignUpForm extends Component {
           type="password"
           placeholder="Confirm Password"
         />
-        <button disabled={isInvalid} type="submit">Sign up</button>
+        <button onClick={this.onSubmit} disabled={isInvalid} type="submit">Sign up</button>
         {error && <p>{error.message}</p>}
       </form>
     );
@@ -102,6 +103,13 @@ const SignUpLink = () => (
   Don't have an account? <Link to={ROUTES.SIGN_UP}></Link>
   </p>
 );
+
+//const SignUpForm = withRouter(withFirebase(SignUpFormBase));
+// used recompose to organize higher order components
+const SignUpForm = compose(
+  withRouter,
+  withFirebase,
+)(SignUpFormBase);
 
 export default SignUpPage;
 
